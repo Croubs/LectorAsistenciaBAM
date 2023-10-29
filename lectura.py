@@ -67,12 +67,12 @@ for sheet in xlsx.sheet_names:
   appendToPayload(asistencia, df_taller, dateBrigade)
 
 # Now you can print or save asistencia_df with all your records together
-access_token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoxLCJ1c2VybmFtZSI6ImJhbTIwMjMiLCJleHAiOjE2OTg2MzgzNTF9.ggG_V_1IkFmp7w3oPk5Lv4-8dYEI712CtAwOnZiVjL8'
+access_token = 'Your_token'
 header = {
   'Authorization': 'Bearer ' + access_token
 }
 
 payload = json.dumps(asistencia)
 
-response = requests.post('http://127.0.0.1:8000/bamers/asistencia/create/', data=payload, headers=header)
+response = requests.post('API_url', data=payload, headers=header)
 print(response.json())
