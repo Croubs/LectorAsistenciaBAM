@@ -74,5 +74,5 @@ header = {
 
 payload = json.dumps(asistencia)
 
-response = requests.post('http://127.0.0.1:8000/asistencia/', data=payload, headers=header)
+response = requests.post('API_url', data=payload, headers=header)
 print(response.json())
