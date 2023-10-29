@@ -1,22 +1,22 @@
 import pandas as pd
 from datetime import date
+import requests
+import json
 
-def appendToNewDf(new_df, source_df, dateBrigade):
+def appendToPayload(payload, source_df, dateBrigade):
   for r in range(source_df.shape[0]):
     row = source_df.iloc[r]
     nombre_completo = row['Nombre'].split()
     roles = {'Mercado':'1', 'Colonia':'2', 'Taller':'3'}
 
-    new_df.loc[len(new_df.index)] = [
-      nombre_completo[0],
-      nombre_completo[1],
-      row['Gen.'],
-      roles[source_df.columns[2]],
-      row['Colonia.1'],
-      dateBrigade
-    ]
+    payload['Nombre'].append(nombre_completo[0])
+    payload['Apellido'].append(nombre_completo[1])
+    payload['Gen'].append(row['Gen.'])
+    payload['Rol'].append(roles[source_df.columns[2]])
+    payload['Colonia'].append(row['Colonia.1'])
+    payload['Fecha'].append(dateBrigade)
 
-def getDateBrigate(sheet):
+def getDateBrigade(sheet):
   month_dict = {
     'Enero': 1,
     'Frebrero': 2,
@@ -40,23 +40,39 @@ def getDateBrigate(sheet):
 
   return dateBrigade.isoformat()
 
-xlsx = pd.ExcelFile('path-to-excel-file')
+xlsx = pd.ExcelFile('../1deOctubre.xlsx')
 
 df = pd.read_excel(xlsx)
-asistencia_df = pd.DataFrame(columns=['Nombre','Apellido','Gen.','Rol','Colonia','Fecha'])
+asistencia = {
+  'Nombre': [],
+  'Apellido': [],
+  'Gen': [],
+  'Rol': [],
+  'Colonia': [],
+  'Fecha': []
+}
 
 for sheet in xlsx.sheet_names:
-  dateBrigate = getDateBrigate(sheet)
+  dateBrigade = getDateBrigade(sheet)
   df_mercado = df.dropna(subset=['Mercado'])
   df_mercado = df_mercado.dropna(axis='columns')
-  appendToNewDf(asistencia_df, df_mercado, dateBrigate)
+  appendToPayload(asistencia, df_mercado, dateBrigade)
 
   df_colonia = df.dropna(subset=['Colonia'])
   df_colonia = df_colonia.dropna(axis='columns')
-  appendToNewDf(asistencia_df, df_colonia, dateBrigate)
+  appendToPayload(asistencia, df_colonia, dateBrigade)
 
   df_taller = df.dropna(subset=['Taller'])
   df_taller = df_taller.dropna(axis='columns')
-  appendToNewDf(asistencia_df, df_taller, dateBrigate)
+  appendToPayload(asistencia, df_taller, dateBrigade)
 
 # Now you can print or save asistencia_df with all your records together
+access_token = 'Your access token'
+header = {
+  'Authorization': 'Bearer ' + access_token
+}
+
+payload = json.dumps(asistencia)
+
+response = requests.post('http://127.0.0.1:8000/asistencia/', data=payload, headers=header)
+print(response.json())
