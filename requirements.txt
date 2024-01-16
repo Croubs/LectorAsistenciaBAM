@@ -1,5 +1,3 @@
-pandas
-openpyxl
-datetime
-requests
-json
+boto3==1.34.19
+openpyxl==3.1.2
+pandas==2.1.2
