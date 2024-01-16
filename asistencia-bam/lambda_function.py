@@ -58,20 +58,35 @@ def getDateBrigate(sheet: str):
     # Return the date -> '2024-01-16'
     return dateBrigade.isoformat()
 
+def createResponse(statusCode:int, body:str):
+    return {
+      'statusCode': statusCode,
+      'body': body
+    }
+
 def lambda_handler(event, context):
     # Get bucket and file name
-    bucket = event['Records'][0]['s3']['bucket']['name']
-    key = event['Records'][0]['s3']['object']['key']
+    try:
+        bucket = event['Records'][0]['s3']['bucket']['name']
+        key = event['Records'][0]['s3']['object']['key']
+    except:
+        return(createResponse(400, 'Bad request'))
     
     # Get file
-    response = s3Client.get_object(Bucket=bucket, Key=key)
-    file = response['Body'].read()
+    try:
+        response = s3Client.get_object(Bucket=bucket, Key=key)
+        file = response['Body'].read()
+    except:
+        return(createResponse(409, 'Error, file not found'))
 
-    # Get the excel
-    xlsx = pd.ExcelFile(file)
-    # Get df
-    df = pd.read_excel(xlsx)
-    
+    try:
+        # Get the excel
+        xlsx = pd.ExcelFile(file)
+        # Get df
+        df = pd.read_excel(xlsx)
+    except:
+        return(createResponse(500, 'Error reading the file'))
+        
     # This will save all records
     asistencia = {
       'Nombre': [],
@@ -83,17 +98,28 @@ def lambda_handler(event, context):
     }
     
     # Get date
-    dateBrigade = getDateBrigate(xlsx.sheet_names[0])
+    try:
+        dateBrigade = getDateBrigate(xlsx.sheet_names[0])
+    except:
+        return(createResponse(500, 'Error getting the brigate date'))
     
     # Get schedule by rols
-    # 1 - Mercado, 2 - Colonia, 3 - Taller
-    for rol in range(1,4):
-        appendDataToPayload(asistencia, df, dateBrigade, rol)
+    try:
+        # 1 - Mercado, 2 - Colonia, 3 - Taller
+        for rol in range(1,4):
+            appendDataToPayload(asistencia, df, dateBrigade, rol)
+    except:
+        return(createResponse(500, f'Error appending the data. Rol:{rol}'))
     
     # Prepair the payload
-    payload = json.dumps(asistencia)
-    # Remove the print when the API runs
-    print(payload)
+    
+    try:
+        payload = json.dumps(asistencia)
+    except:
+        return(createResponse(500, 'Error creating the payload'))
+    
+    # Remove the next return when the API runs
+    return(createResponse(200, payload))
     
     
     # Uncomment when the API runs
