@@ -52,6 +52,11 @@ def getDateBrigate(sheet: str):
     day = sheet_name[0]
     month = month_dict[sheet_name[2]]
     year = date.today().year
+    
+    # Check if the brigate is in the next year, if it is, add one to the year
+    if month == 1 and date.today().month == 12:
+        year += 1 
+    
     # Create a date object with the date
     dateBrigade = date(year,month,int(day))
     
